@@ -26,6 +26,8 @@
 ; power, you may want to raise or lower this value.
 
 #Requires AutoHotkey v2.0
+#SingleInstance
+Persistent
 
 CoordMode "Mouse"
 SetWinDelay 0
@@ -33,6 +35,38 @@ SetWinDelay 0
 last_lbutton := A_TickCount
 last_rbutton := A_TickCount
 last_mbutton := A_TickCount
+
+IsAdmin() {
+    return A_IsAdmin
+}
+
+IsExe() {
+    return A_IsCompiled
+}
+
+ExitFunc(*) {
+    ExitApp()
+}
+
+InstallFunc(*) {
+    if not IsAdmin() {
+        try {
+            if IsExe()
+                Run '*RunAs "' A_ScriptFullPath '" /I'
+            else
+                Run '*RunAs "' A_AhkPath '" "' A_ScriptFullPath '" /I'
+        }
+        catch Error as e {
+            MsgBox("Error: " e.Message)
+        }
+
+
+        return
+    }
+
+    MsgBox("Installing...")
+}
+
 
 Log(text){
 	OutputDebug("AHK | " text)
@@ -49,7 +83,27 @@ IsDoubleClick(last) {
     return false
 }
 
+Init() {
+    for n, param in A_Args {
+        if param == "-install" or param == "--install" or param == "/install" or param == "/I" {
+            InstallFunc()
+        }
+    }
 
+    Tray := A_TrayMenu ; For convenience.
+    if IsExe() {
+        Tray.Delete()
+    }
+    else {
+        Tray.Add()
+    }
+    
+    Tray.Add("Install", InstallFunc)
+    
+    if IsExe() {
+        Tray.Add("Exit", ExitFunc)
+    }
+}
 
 LWin & LButton::
     {
@@ -177,3 +231,6 @@ LWin & MButton::
             return
         }
     }
+
+
+Init()
