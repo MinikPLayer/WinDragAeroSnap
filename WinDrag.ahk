@@ -48,25 +48,100 @@ ExitFunc(*) {
     ExitApp()
 }
 
+IsInstalled(*) {
+    ret := RunWait(A_WinDir '\System32\schtasks.exe /QUERY /TN "WinDrag"', , "Hide")
+    return ret == 0
+}
+
+RunAsAdmin(param) {
+    try {
+        if IsExe()
+            Run '*RunAs "' A_ScriptFullPath '" ' param
+        else
+            Run '*RunAs "' A_AhkPath '" "' A_ScriptFullPath '" ' param
+    }
+    catch Error as e {
+        MsgBox("Error: " e.Message)
+    }
+}
+
 InstallFunc(*) {
+    if IsInstalled() {
+        ret := MsgBox("Task already installed. Do you want to reinstall?", "Install", 4 | 32)
+        if ret == "No"
+            return
+    }
+    
     if not IsAdmin() {
-        try {
-            if IsExe()
-                Run '*RunAs "' A_ScriptFullPath '" /I'
-            else
-                Run '*RunAs "' A_AhkPath '" "' A_ScriptFullPath '" /I'
-        }
-        catch Error as e {
-            MsgBox("Error: " e.Message)
-        }
-
-
+        RunAsAdmin('/I')
         return
     }
 
-    MsgBox("Installing...")
+    target_path := A_ScriptFullPath
+    if not IsExe() {
+        target_path := A_AhkPath " " A_ScriptFullPath
+    }
+    target_path := '"' target_path '"'
+    ret := RunWait(A_WinDir '\System32\schtasks.exe /CREATE /SC ONLOGON /TN "WinDrag" /DELAY 0000:05 /RL HIGHEST /F /TR ' target_path,, "Hide")
+    if ret != 0 {
+        MsgBox("Installation failed", "Install", 16)
+    } else {
+        is_installed := IsInstalled()
+        if not is_installed {
+            MsgBox("SCHTASKS completed, but task is not created.", "Install", 16)
+        }
+        else {
+            MsgBox("Installation completed!", "Install", 64)
+            InitTray() ; Recreate tray
+        }
+    }
 }
 
+UninstallFunc(*) {
+    if not IsInstalled() {
+        MsgBox("Task not installed", "Uninstall", 16)
+        return
+    }
+
+    if not IsAdmin() {
+        RunAsAdmin('/U')
+        return
+    }
+
+    ret := RunWait(A_WinDir '\System32\schtasks.exe /DELETE /TN "WinDrag" /F', , "Hide")
+    if ret != 0 {
+        MsgBox("Uninstallation failed", "Uninstall", 16)
+    } else {
+        is_installed := IsInstalled()
+        if is_installed {
+            MsgBox("SCHTASKS completed, but task is not deleted.", "Uninstall", 16)
+        }
+        else {
+            MsgBox("Uninstallation completed!", "Uninstall", 64)
+            InitTray() ; Recreate tray
+        }
+    }
+}
+
+InitTray() {
+    Tray := A_TrayMenu ; For convenience.
+    Tray.Delete()
+    if not IsExe() {
+        Tray.AddStandard()
+        Tray.Add()
+    }
+
+    if IsInstalled() {
+        Tray.Add("Uninstall", UninstallFunc)
+    }
+    else {
+        Tray.Add("Install", InstallFunc)
+    }
+    
+    if IsExe() {
+        Tray.Add("Exit", ExitFunc)
+    }
+}
 
 Log(text){
 	OutputDebug("AHK | " text)
@@ -88,21 +163,16 @@ Init() {
         if param == "-install" or param == "--install" or param == "/install" or param == "/I" {
             InstallFunc()
         }
+        else if param == "-uninstall" or param == "--uninstall" or param == "/uninstall" or param == "/U" {
+            UninstallFunc()
+        }
+        else {
+            MsgBox("Invalid switch " param, "Invalid switch", 16)
+            ExitApp()
+        }
     }
 
-    Tray := A_TrayMenu ; For convenience.
-    if IsExe() {
-        Tray.Delete()
-    }
-    else {
-        Tray.Add()
-    }
-    
-    Tray.Add("Install", InstallFunc)
-    
-    if IsExe() {
-        Tray.Add("Exit", ExitFunc)
-    }
+    InitTray()
 }
 
 LWin & LButton::
