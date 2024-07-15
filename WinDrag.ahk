@@ -1,29 +1,4 @@
-; Easy Window Dragging -- KDE style (based on the v1 script by Jonny) 
-; https://www.autohotkey.com
-; This script makes it much easier to move or resize a window: 1) Hold down
-; the ALT key and LEFT-click anywhere inside a window to drag it to a new
-; location; 2) Hold down ALT and RIGHT-click-drag anywhere inside a window
-; to easily resize it; 3) Press ALT twice, but before releasing it the second
-; time, left-click to minimize the window under the mouse cursor, right-click
-; to maximize it, or middle-click to close it.
-
-; The Double-Alt modifier is activated by pressing
-; Alt twice, much like a double-click. Hold the second
-; press down until you click.
-;
-; The shortcuts:
-;  Alt + Left Button  : Drag to move a window.
-;  Alt + Right Button : Drag to resize a window.
-;  Double-Alt + Left Button   : Minimize a window.
-;  Double-Alt + Right Button  : Maximize/Restore a window.
-;  Double-Alt + Middle Button : Close a window.
-;
-; You can optionally release Alt after the first
-; click rather than holding it down the whole time.
-
-; This is the setting that runs smoothest on my
-; system. Depending on your video card and cpu
-; power, you may want to raise or lower this value.
+; Based on https://www.autohotkey.com/docs/v1/scripts/#EasyWindowDrag_(KDE)
 
 #Requires AutoHotkey v2.0
 #SingleInstance
