@@ -8,6 +8,8 @@ Persistent
 CoordMode "Mouse"
 SetWinDelay 0
 
+OnExit ExitFunc
+
 snap_distance := 10
 
 last_lbutton := A_TickCount
@@ -22,7 +24,7 @@ IsExe() {
     return A_IsCompiled
 }
 
-ExitFunc(*) {
+ExitTray(*) {
     ExitApp()
 }
 
@@ -117,7 +119,7 @@ InitTray() {
     }
     
     if IsExe() {
-        Tray.Add("Exit", ExitFunc)
+        Tray.Add("Exit", ExitTray)      
     }
 }
 
@@ -195,6 +197,46 @@ SnapHorizontal(&already_snapped, is_snapped, key_name, &as_top, is_top, &as_bott
     }
 }
 
+
+SetSystemCursor(Cursor := "", cx := 0, cy := 0) {
+
+    static SystemCursors := Map("APPSTARTING", 32650, "ARROW", 32512, "CROSS", 32515, "HAND", 32649, "HELP", 32651, "IBEAM", 32513, "NO", 32648,
+                            "SIZEALL", 32646, "SIZENESW", 32643, "SIZENS", 32645, "SIZENWSE", 32642, "SIZEWE", 32644, "UPARROW", 32516, "WAIT", 32514)
+ 
+    if (Cursor = "") {
+       AndMask := Buffer(128, 0xFF), XorMask := Buffer(128, 0)
+ 
+       for CursorName, CursorID in SystemCursors {
+          CursorHandle := DllCall("CreateCursor", "ptr", 0, "int", 0, "int", 0, "int", 32, "int", 32, "ptr", AndMask, "ptr", XorMask, "ptr")
+          DllCall("SetSystemCursor", "ptr", CursorHandle, "int", CursorID) ; calls DestroyCursor
+       }
+       return
+    }
+ 
+    if (Cursor ~= "^(IDC_)?(?i:AppStarting|Arrow|Cross|Hand|Help|IBeam|No|SizeAll|SizeNESW|SizeNS|SizeNWSE|SizeWE|UpArrow|Wait)$") {
+       Cursor := RegExReplace(Cursor, "^IDC_")
+ 
+       if !(CursorShared := DllCall("LoadCursor", "ptr", 0, "ptr", SystemCursors[StrUpper(Cursor)], "ptr"))
+          throw Error("Error: Invalid cursor name")
+ 
+       for CursorName, CursorID in SystemCursors {
+          CursorHandle := DllCall("CopyImage", "ptr", CursorShared, "uint", 2, "int", cx, "int", cy, "uint", 0, "ptr")
+          DllCall("SetSystemCursor", "ptr", CursorHandle, "int", CursorID) ; calls DestroyCursor
+       }
+       return
+    }
+ 
+    throw Error("Error: Invalid file path or cursor name")
+ }
+
+RestoreCursor() {
+    return DllCall("SystemParametersInfo", "uint", SPI_SETCURSORS := 0x57, "uint", 0, "ptr", 0, "uint", 0)
+}
+
+ExitFunc(ExitReason, ExitCode) {
+    RestoreCursor()
+}
+
 LWin & LButton::
     {
         global last_lbutton
@@ -226,6 +268,7 @@ LWin & LButton::
         already_snapped_Top := False
         already_snapped_Bottom := False
 
+        SetSystemCursor("SizeAll")
         Loop
         {
             if !GetKeyState("LButton", "P") ; Break if button has been released.
@@ -278,6 +321,8 @@ LWin & LButton::
                 
             }
         }
+
+        RestoreCursor()
     }
 
 LWin & RButton::
@@ -320,6 +365,11 @@ LWin & RButton::
             KDE_WinUp := -1
         }
 
+        if KDE_WinLeft == KDE_WinUp
+            SetSystemCursor("SizeNWSE")
+        else
+            SetSystemCursor("SizeNESW")
+
         Loop
         {
             if !GetKeyState("RButton", "P") ; Break if button has been released.
@@ -339,6 +389,8 @@ LWin & RButton::
             KDE_X1 := (KDE_X2 + KDE_X1) ; Reset the initial position for the next iteration.
             KDE_Y1 := (KDE_Y2 + KDE_Y1)
         }
+
+        RestoreCursor()
     }
 
     ; "Alt + MButton" may be simpler, but I like an extra measure of security for
