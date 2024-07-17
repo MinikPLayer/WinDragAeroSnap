@@ -1,4 +1,5 @@
 ; Based on https://www.autohotkey.com/docs/v1/scripts/#EasyWindowDrag_(KDE)
+; WARNING: Tested only on Single screen configurations.
 
 #Requires AutoHotkey v2.0
 #SingleInstance
@@ -6,6 +7,8 @@ Persistent
 
 CoordMode "Mouse"
 SetWinDelay 0
+
+snap_distance := 10
 
 last_lbutton := A_TickCount
 last_rbutton := A_TickCount
@@ -150,6 +153,48 @@ Init() {
     InitTray()
 }
 
+
+GetScreenResolutionUnderMouse(x, y) {
+    dim := {width:0, height:0}                              ; Object to return with width and height
+    count := SysGet(80)                            ; Get number of monitors
+    Loop (count) {                                         ; Loop through each monitor
+        MonitorGet(A_Index, &monLeft, &monTop, &monRight, &monBottom)                                ;  Get this monitor's bounds 
+        if (x >= monLeft) && (x <= monRight)                ;  if x falls between the left and right
+        && (y <= monBottom) && (y >= monTop)                ;  and y falls between top and bottom
+            dim.width := Abs(monRight - monLeft)            ;   Use the bounds to calculate the width
+            ,dim.height := Abs(monTop - monBottom)          ;   and the height
+    } Until (dim.width > 0)                                 ; Break when a width is found
+    return dim                                              ; Return the dimension object
+}
+
+SnapVertical(&already_snapped, is_snapped, key_name) {
+    if is_snapped {
+        if (NOT already_snapped) {
+            sleep(1)                    ; Janky, not ideal, but it works. TODO: Find a better way.
+            Send "{LWin down}" key_name
+            already_snapped := True
+        }
+    }
+    else {
+        already_snapped := False
+    }
+}
+
+SnapHorizontal(&already_snapped, is_snapped, key_name, &as_top, is_top, &as_bottom, is_bottom) {
+    if is_snapped {
+        if(NOT already_snapped) {
+            Send "{LWin down}" key_name
+            already_snapped := True
+        }
+
+        SnapVertical(&as_top, is_top, "{Up}")
+        SnapVertical(&as_bottom, is_bottom, "{Down}")
+    }
+    else {
+        sn_Left := False
+    }
+}
+
 LWin & LButton::
     {
         global last_lbutton
@@ -172,11 +217,14 @@ LWin & LButton::
         ; Get the initial mouse position and window id, and
         ; abort if the window is maximized.
         MouseGetPos &KDE_X1, &KDE_Y1, &KDE_id
-        ; if WinGetMinMax(KDE_id)
-        ;     WinRestore KDE_id
 
         ; Get the initial window position.
         WinGetPos &KDE_WinX1, &KDE_WinY1,,, KDE_id
+
+        already_snapped_Left := False
+        already_snapped_Right := False
+        already_snapped_Top := False
+        already_snapped_Bottom := False
 
         Loop
         {
@@ -184,17 +232,50 @@ LWin & LButton::
                 break
 
             MouseGetPos &KDE_X2, &KDE_Y2 ; Get the current mouse position.
+            MOUSE_X := KDE_X2
+            MOUSE_Y := KDE_Y2
+
             KDE_X2 -= KDE_X1 ; Obtain an offset from the initial mouse position.
             KDE_Y2 -= KDE_Y1
             KDE_WinX2 := (KDE_WinX1 + KDE_X2) ; Apply this offset to the window position.
             KDE_WinY2 := (KDE_WinY1 + KDE_Y2)
 
             if KDE_X2 != 0 and KDE_Y2 != 0 {
-                if WinGetMinMax(KDE_id)
+                if (NOT already_snapped_Left) AND (not already_snapped_Right) {
                     WinRestore KDE_id
+                }
 
                 WinActivate KDE_id ; Activate the window.
-                WinMove KDE_WinX2, KDE_WinY2,,, KDE_id ; Move the window to the new position.
+
+                screen_res := GetScreenResolutionUnderMouse(MOUSE_X, MOUSE_Y)
+                WinGetPos(&win_x, &win_y, &win_w, &win_h, KDE_id)
+
+                snap_left := False
+                snap_right := False
+                snap_top := False
+                snap_bottom := False
+
+                if MOUSE_X < snap_distance {
+                    snap_left := True
+                }
+                else if MOUSE_X > screen_res.width - snap_distance {
+                    snap_right := True
+                }
+
+                if MOUSE_Y < snap_distance {
+                    snap_top := True
+                }
+                else if MOUSE_Y > screen_res.height - snap_distance {
+                    snap_bottom := True
+                }
+
+                SnapHorizontal(&already_snapped_Left, snap_left, "{Left}", &already_snapped_Top, snap_top, &already_snapped_Bottom, snap_bottom)
+                SnapHorizontal(&already_snapped_Right, snap_right, "{Right}", &already_snapped_Top, snap_top, &already_snapped_Bottom, snap_bottom)
+
+                if (not snap_left) and (not snap_right) {
+                    WinMove KDE_WinX2, KDE_WinY2,,, KDE_id ; Move the window to the new position.
+                }
+                
             }
         }
     }
@@ -246,6 +327,7 @@ LWin & RButton::
             MouseGetPos &KDE_X2, &KDE_Y2 ; Get the current mouse position.
             ; Get the current window position and size.
             WinGetPos &KDE_WinX1, &KDE_WinY1, &KDE_WinW, &KDE_WinH, KDE_id
+
             KDE_X2 -= KDE_X1 ; Obtain an offset from the initial mouse position.
             KDE_Y2 -= KDE_Y1
             ; Then, act according to the defined region.
