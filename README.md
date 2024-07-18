@@ -28,6 +28,7 @@ Select Uninstall from the tray menu.
 ## Current limitations
 * Aero snap sometimes doesn't show window recomendations for the other half. It works fine for explorer, but doesn't work for other apps.
 * Multi-monitor setup is not tested. Please post an issue if it's important for you.
+* When run without admin rights app is not able to modify Admin windows (including Task Manager).
 
 ## To-Do
 * Resize snapping to another windows and screen borders.
