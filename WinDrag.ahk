@@ -193,7 +193,7 @@ SnapHorizontal(&already_snapped, is_snapped, key_name, &as_top, is_top, &as_bott
         SnapVertical(&as_bottom, is_bottom, "{Down}")
     }
     else {
-        sn_Left := False
+        already_snapped := False
     }
 }
 
