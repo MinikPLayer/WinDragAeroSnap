@@ -29,3 +29,7 @@ Select Uninstall from the tray menu.
 * Resizing when Aero Snapped doesn't resize another snapped windows.
 * Multi-monitor setup is not tested. Please post an issue if it's important for you.
 * Aero snap is a little buggy and poorly implemented. Will be fixed in the future.
+
+## To-Do
+* Resize snapping
+* Aero-snaped resizing
