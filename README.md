@@ -21,3 +21,9 @@ Install registers the current executable as a startup app. Moving the .exe to an
 
 ## Uninstallation
 Select Uninstall from the tray menu.
+
+
+## Current limitations
+* Resizing when Aero Snapped doesn't resize another snapped windows.
+* Multi-monitor setup is not tested. Please post an issue if it's important for you.
+* Aero snap is a little buggy and poorly implemented. Will be fixed in the future.
