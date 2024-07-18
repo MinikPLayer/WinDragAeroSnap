@@ -1,4 +1,4 @@
-# WinDrag
+# WinDragAeroSnap
 Simple AutoHotKey v2 script to drag and resize Windows using Win+Mouse with Aero Snap support.
 
 ## Usage
