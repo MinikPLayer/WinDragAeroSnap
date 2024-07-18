@@ -17,3 +17,7 @@ After running the executable find it's tray icon. Right click -> Install will re
 **Warning** 
 
 Install registers the current executable as a startup app. Moving the .exe to another location will stop the autostart from working. To reapply the installation rerun the Install function from the tray menu after copying the executable to a new location.
+
+
+## Uninstallation
+Select Uninstall from the tray menu.
