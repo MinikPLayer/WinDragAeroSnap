@@ -9,7 +9,7 @@ Script will automatically activate after running the executable.
 * **Win + LMB drag** - Move window.
   - When dragging a window to the screen edges Aero snap will be automatically activated. (W.I.P. - can be a little buggy).
 * **Win + RMB drag** - Resize window.
-* **Win + MMB** - Close window.
+* **Win + MMB double click** - Close window.
 * **Win + LMB double click** - Maximize / Restore window.
 * **Win + RMB double click** - Minimize window.
 
@@ -26,10 +26,9 @@ Select Uninstall from the tray menu.
 
 
 ## Current limitations
-* Resizing when Aero Snapped doesn't resize another snapped windows.
+* Aero snap sometimes doesn't show window recomendations for the other half. It works fine for explorer, but doesn't work for other apps.
 * Multi-monitor setup is not tested. Please post an issue if it's important for you.
-* Aero snap is a little buggy and poorly implemented. Will be fixed in the future.
 
 ## To-Do
-* Resize snapping
-* Aero-snaped resizing
+* Resize snapping to another windows and screen borders.
+* Resizing when Aero Snapped doesn't resize another snapped windows.
