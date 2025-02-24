@@ -284,7 +284,7 @@ LWin & LButton::
     SetSystemCursor("SizeAll")
     Loop
     {
-        if !GetKeyState("LButton", "P") ; Break if button has been released.
+        if !is_LWin_LMB_pressed ; Break if button has been released.
             break
 
         MouseGetPos &KDE_X2, &KDE_Y2 ; Get the current mouse position.
@@ -393,7 +393,7 @@ LWin & RButton::
 
     Loop
     {
-        if !GetKeyState("RButton", "P") ; Break if button has been released.
+        if !is_LWin_RMB_pressed ; Break if button has been released.
             break
         MouseGetPos &KDE_X2, &KDE_Y2 ; Get the current mouse position.
         ; Get the current window position and size.
